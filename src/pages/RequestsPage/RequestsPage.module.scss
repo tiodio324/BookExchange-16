@@ -1,0 +1,76 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include flex-column;
+  gap: $spacing-lg;
+}
+
+.header {
+  margin-bottom: $spacing-md;
+}
+
+.title {
+  @include heading-1;
+  margin: 0 0 $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-base;
+  color: $color-text-muted;
+  margin: 0;
+}
+
+.list {
+  @include flex-column;
+  gap: $spacing-md;
+}
+
+.requestCard {
+  @include flex-between;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.info {
+  @include flex-column;
+  gap: $spacing-xs;
+  flex: 1;
+  min-width: 220px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.bookTitle {
+  @include heading-3;
+  font-size: $font-size-lg;
+}
+
+.meta {
+  @include caption-text;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.buttons {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.empty {
+  text-align: center;
+  color: $color-text-muted;
+  padding: $spacing-lg;
+  margin: 0;
+}

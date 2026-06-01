@@ -1,0 +1,73 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.form {
+  @include flex-column;
+  gap: $spacing-lg;
+}
+
+.roleSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+
+  @media (max-width: 420px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.roleButton {
+  @include flex-column;
+  @include flex-center;
+  gap: $spacing-sm;
+  padding: $spacing-lg;
+  background: $color-bg-secondary;
+  border: 2px solid $color-border-light;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  transition: all $transition-fast;
+  
+  svg {
+    width: 32px;
+    height: 32px;
+    color: $color-text-muted;
+    transition: color $transition-fast;
+  }
+  
+  span {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    transition: color $transition-fast;
+  }
+  
+  &:hover {
+    border-color: $color-primary-light;
+    background: $color-bg-tertiary;
+    
+    svg {
+      color: $color-primary;
+    }
+  }
+  
+  &.active {
+    border-color: $color-primary;
+    background: rgba($color-primary, 0.05);
+    
+    svg {
+      color: $color-primary;
+    }
+    
+    span {
+      color: $color-primary;
+    }
+  }
+}
+
+.hint {
+  text-align: center;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  margin: 0;
+}

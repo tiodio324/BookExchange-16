@@ -1,0 +1,109 @@
+// ============================================
+// Global Colors - Emerald Reading Theme
+// ============================================
+// This file contains all color variables used throughout the application.
+// Change colors here to update the entire site's color scheme.
+
+// Primary Emerald / Teal Palette
+$color-primary-darkest: #062925;      // Deep pine
+$color-primary-dark: #0C463F;         // Dark teal
+$color-primary: #128576;              // Emerald teal
+$color-primary-medium: #16A088;       // Vivid teal
+$color-primary-light: #4FBBA7;        // Soft teal
+$color-primary-lighter: #8FD6C8;      // Mint
+$color-primary-lightest: #CFEBE4;     // Pale mint
+
+// Accent Colors (warm coral to contrast the greens)
+$color-accent: #F1894E;               // Coral orange
+$color-accent-light: #FBDBC6;         // Light coral
+$color-accent-warm: #E26A3A;          // Deep coral
+
+// Background Colors
+$color-bg-primary: #FAFDFB;           // Cool off-white
+$color-bg-secondary: #F0F6F4;         // Light mint-grey
+$color-bg-tertiary: #E2EEEA;          // Soft sage
+$color-bg-dark: #062925;              // Deep pine
+
+// Text Colors
+$color-text-primary: #0E1F1B;         // Main text - deep pine-black
+$color-text-secondary: #38514A;       // Secondary text
+$color-text-muted: #6A817A;           // Muted text
+$color-text-light: #97AAA3;           // Light text
+$color-text-inverse: #FAFDFB;         // Text on dark backgrounds
+
+// Status Colors
+$color-success: #2E9E63;              // Fresh green
+$color-success-light: #E4F6EC;        // Light green bg
+$color-warning: #D99A21;              // Amber
+$color-warning-light: #FCF3DF;        // Light amber bg
+$color-error: #D24E3E;                // Warm red
+$color-error-light: #FBE9E6;          // Light red bg
+$color-info: #2F86A6;                 // Ocean blue
+$color-info-light: #E5F2F6;           // Light blue bg
+
+// Border Colors
+$color-border-primary: #C9DCD6;       // Main border
+$color-border-light: #E1ECE8;         // Light border
+$color-border-dark: #9BB4AC;          // Dark border
+
+// Shadow Colors
+$color-shadow: rgba(6, 41, 37, 0.10);
+$color-shadow-medium: rgba(6, 41, 37, 0.16);
+$color-shadow-dark: rgba(6, 41, 37, 0.26);
+
+// Gradient Definitions
+$gradient-primary: linear-gradient(135deg, $color-primary 0%, $color-primary-medium 100%);
+$gradient-header: linear-gradient(180deg, $color-primary-darkest 0%, $color-primary-dark 100%);
+$gradient-card: linear-gradient(145deg, $color-bg-primary 0%, $color-bg-secondary 100%);
+
+// ============================================
+// CSS Custom Properties Export
+// ============================================
+:root {
+  // Primary
+  --color-primary-darkest: #{$color-primary-darkest};
+  --color-primary-dark: #{$color-primary-dark};
+  --color-primary: #{$color-primary};
+  --color-primary-medium: #{$color-primary-medium};
+  --color-primary-light: #{$color-primary-light};
+  --color-primary-lighter: #{$color-primary-lighter};
+  --color-primary-lightest: #{$color-primary-lightest};
+  
+  // Accent
+  --color-accent: #{$color-accent};
+  --color-accent-light: #{$color-accent-light};
+  --color-accent-warm: #{$color-accent-warm};
+  
+  // Background
+  --color-bg-primary: #{$color-bg-primary};
+  --color-bg-secondary: #{$color-bg-secondary};
+  --color-bg-tertiary: #{$color-bg-tertiary};
+  --color-bg-dark: #{$color-bg-dark};
+  
+  // Text
+  --color-text-primary: #{$color-text-primary};
+  --color-text-secondary: #{$color-text-secondary};
+  --color-text-muted: #{$color-text-muted};
+  --color-text-light: #{$color-text-light};
+  --color-text-inverse: #{$color-text-inverse};
+  
+  // Status
+  --color-success: #{$color-success};
+  --color-success-light: #{$color-success-light};
+  --color-warning: #{$color-warning};
+  --color-warning-light: #{$color-warning-light};
+  --color-error: #{$color-error};
+  --color-error-light: #{$color-error-light};
+  --color-info: #{$color-info};
+  --color-info-light: #{$color-info-light};
+  
+  // Border
+  --color-border-primary: #{$color-border-primary};
+  --color-border-light: #{$color-border-light};
+  --color-border-dark: #{$color-border-dark};
+  
+  // Shadow
+  --color-shadow: #{$color-shadow};
+  --color-shadow-medium: #{$color-shadow-medium};
+  --color-shadow-dark: #{$color-shadow-dark};
+}

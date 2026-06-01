@@ -1,0 +1,111 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include flex-column;
+  gap: $spacing-lg;
+}
+
+.header {
+  margin-bottom: $spacing-md;
+}
+
+.title {
+  @include heading-1;
+  margin: 0 0 $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-base;
+  color: $color-text-muted;
+  margin: 0;
+}
+
+.filters {
+  padding: $spacing-md !important;
+}
+
+.filterRow {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+.filterItem {
+  flex: 1;
+  min-width: 200px;
+
+  @include mobile {
+    min-width: 100%;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $spacing-lg;
+}
+
+.bookCard {
+  @include flex-column;
+  gap: $spacing-sm;
+  height: 100%;
+}
+
+.bookTop {
+  @include flex-between;
+  gap: $spacing-sm;
+  align-items: flex-start;
+}
+
+.bookTitle {
+  @include heading-3;
+  margin: 0;
+}
+
+.bookAuthor {
+  @include body-text;
+  font-style: italic;
+  margin: 0;
+}
+
+.bookMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-top: $spacing-xs;
+}
+
+.bookDesc {
+  @include caption-text;
+  @include line-clamp(3);
+  margin: $spacing-xs 0 0;
+}
+
+.bookFooter {
+  margin-top: auto;
+  padding-top: $spacing-sm;
+  @include flex-start;
+  min-height: 40px;
+}
+
+.holder {
+  @include caption-text;
+}
+
+.hint {
+  @include caption-text;
+  color: $color-text-light;
+}
+
+.empty {
+  text-align: center;
+  color: $color-text-muted;
+  padding: $spacing-lg;
+  margin: 0;
+}

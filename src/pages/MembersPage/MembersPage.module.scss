@@ -1,0 +1,31 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include flex-column;
+  gap: $spacing-lg;
+}
+
+.header {
+  margin-bottom: $spacing-md;
+}
+
+.title {
+  @include heading-1;
+  margin: 0 0 $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-base;
+  color: $color-text-muted;
+  margin: 0;
+}
+
+.card {
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  background: $color-bg-tertiary;
+  padding: 2px $spacing-xs;
+  border-radius: $radius-sm;
+}
