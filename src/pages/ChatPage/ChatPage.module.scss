@@ -7,10 +7,15 @@
   gap: $spacing-lg;
   height: calc(100vh - 140px);
   min-height: 480px;
+
+  @include mobile {
+    overflow: hidden;
+  }
 }
 
 .header {
   margin-bottom: $spacing-xs;
+  flex-shrink: 0;
 }
 
 .title {
@@ -33,7 +38,7 @@
 
   @include mobile {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: minmax(0, 2fr) minmax(0, 3fr);
   }
 }
 
@@ -43,18 +48,25 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+
+  @include mobile {
+    height: 100%;
+  }
 }
 
 .listHeader {
   padding: $spacing-md;
   font-weight: 600;
   border-bottom: 1px solid $color-border-light;
+  flex-shrink: 0;
 }
 
 .previews {
   list-style: none;
   margin: 0;
   padding: 0;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -111,6 +123,7 @@
 
 .messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: $spacing-md;
   @include flex-column;
@@ -149,7 +162,15 @@
   gap: $spacing-sm;
   padding: $spacing-md;
   border-top: 1px solid $color-border-light;
-  align-items: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sendButton {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  padding: 0;
 }
 
 .empty {

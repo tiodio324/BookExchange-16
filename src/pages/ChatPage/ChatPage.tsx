@@ -12,7 +12,7 @@ export const ChatPage = observer(() => {
   const { navigate } = navigationStore;
 
   const [messageText, setMessageText] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (currentUserId && isAuthenticated) {
@@ -23,7 +23,9 @@ export const ChatPage = observer(() => {
   }, [currentUserId, isAuthenticated, loadUsers]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
   }, [messages]);
 
   const handleSend = async (e: React.FormEvent) => {
@@ -96,7 +98,7 @@ export const ChatPage = observer(() => {
             </div>
           ) : (
             <>
-              <div className={styles.messages}>
+              <div className={styles.messages} ref={messagesContainerRef}>
                 {loadingMessages ? (
                   <p className={styles.empty}>Загрузка сообщений...</p>
                 ) : messages.length === 0 ? (
@@ -107,12 +109,11 @@ export const ChatPage = observer(() => {
                       key={msg.id}
                       className={`${styles.message} ${msg.senderId === currentUserId ? styles.own : styles.other}`}
                     >
-                      <p className={styles.messageText}>{msg.text}</p>
+                      <div className={styles.messageText}>{msg.text}</div>
                       <span className={styles.messageTime}>{formatDateTime(msg.createdAt)}</span>
                     </div>
                   ))
                 )}
-                <div ref={messagesEndRef} />
               </div>
               <form className={styles.inputRow} onSubmit={handleSend}>
                 <Input
@@ -120,9 +121,20 @@ export const ChatPage = observer(() => {
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                 />
-                <Button type="submit" variant="primary" loading={sending} disabled={!messageText.trim()}>
-                  Отправить
-                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className={styles.sendButton}
+                  loading={sending}
+                  disabled={!messageText.trim()}
+                  aria-label="Отправить"
+                  icon={
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                  }
+                />
               </form>
             </>
           )}

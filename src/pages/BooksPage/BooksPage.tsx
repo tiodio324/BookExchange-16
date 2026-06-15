@@ -327,7 +327,7 @@ export const BooksPage = observer(() => {
         <div className={styles.filterRow}>
           <div className={styles.filterItem}>
             <Input
-              placeholder="Поиск по названию или автору..."
+              placeholder="Поиск по названию"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               leftIcon={

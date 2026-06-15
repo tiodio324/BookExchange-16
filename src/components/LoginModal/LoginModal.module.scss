@@ -22,11 +22,12 @@
   @include flex-center;
   gap: $spacing-sm;
   padding: $spacing-lg;
-  background: $color-bg-secondary;
+  background: $color-bg-tertiary;
   border: 2px solid $color-border-light;
   border-radius: $radius-lg;
   cursor: pointer;
   transition: all $transition-fast;
+  color: black !important;
   
   svg {
     width: 32px;
