@@ -36,6 +36,7 @@ export interface FilterParams {
   search?: string;
   genreId?: string;
   status?: string;
+  format?: string;
 }
 
 // Select option type

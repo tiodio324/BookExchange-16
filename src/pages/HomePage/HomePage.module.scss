@@ -50,6 +50,55 @@
   color: $color-text-inverse;
 }
 
+.welcomeButtons {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+
+  @include mobile {
+    justify-content: center;
+  }
+}
+
+.welcomeBtnPrimary {
+  background: $color-text-inverse !important;
+  color: $color-primary-dark !important;
+  border: 2px solid $color-text-inverse !important;
+  font-weight: $font-weight-semibold;
+  box-shadow: $shadow-md;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-lightest !important;
+    color: $color-primary-darkest !important;
+    border-color: $color-primary-lightest !important;
+    box-shadow: $shadow-lg;
+  }
+
+  &:active:not(:disabled) {
+    background: $color-primary-lighter !important;
+    transform: translateY(1px);
+  }
+}
+
+.welcomeBtnSecondary {
+  background: rgba($color-text-inverse, 0.12) !important;
+  color: $color-text-inverse !important;
+  border: 2px solid rgba($color-text-inverse, 0.9) !important;
+  font-weight: $font-weight-semibold;
+
+  &:hover:not(:disabled) {
+    background: rgba($color-text-inverse, 0.22) !important;
+    color: $color-text-inverse !important;
+    border-color: $color-text-inverse !important;
+    box-shadow: $shadow-sm;
+  }
+
+  &:active:not(:disabled) {
+    background: rgba($color-text-inverse, 0.3) !important;
+    transform: translateY(1px);
+  }
+}
+
 .welcomeDecor {
   position: absolute;
   right: -40px;

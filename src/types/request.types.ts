@@ -1,15 +1,15 @@
 // ============================================
-// Request Types (Заявка на выдачу / возврат книги)
+// Request Types (Журнал действий пользователей)
 // ============================================
 
-export type RequestType = 'take' | 'return';
+export type RequestType = 'take' | 'return' | 'add' | 'download';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
 export interface BookRequest {
   id: string;
   bookId: string;
-  memberId: string;
+  userId: string;
   type: RequestType;
   status: RequestStatus;
   note?: string;
@@ -20,25 +20,24 @@ export interface BookRequest {
 
 export interface RequestFormData {
   bookId: string;
-  memberId: string;
+  userId: string;
   type: RequestType;
   note?: string;
 }
 
-// Подписи типа заявки
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
-  take: 'Взять книгу',
-  return: 'Вернуть книгу',
+  take: 'Взял книгу',
+  return: 'Отдал в обмен',
+  add: 'Добавил книгу',
+  download: 'Скачал книгу',
 };
 
-// Подписи статуса заявки
 export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
   pending: 'На рассмотрении',
-  approved: 'Одобрена',
+  approved: 'Выполнено',
   rejected: 'Отклонена',
 };
 
-// Цвета статуса заявки (Badge variant)
 export const REQUEST_STATUS_COLORS: Record<RequestStatus, 'success' | 'warning' | 'error'> = {
   pending: 'warning',
   approved: 'success',

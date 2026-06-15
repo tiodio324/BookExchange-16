@@ -2,6 +2,16 @@ import { makeAutoObservable } from 'mobx';
 import { PageId, PAGES_CONFIG, PageConfig } from '@/types';
 import { authStore } from './AuthStore';
 
+const pageAccessAllowed = (page: PageConfig): boolean => {
+  if (page.requiredRole && !authStore.hasRole(page.requiredRole)) {
+    return false;
+  }
+  if (page.requiredPermission && !authStore.hasPermission(page.requiredPermission)) {
+    return false;
+  }
+  return true;
+};
+
 export class NavigationStore {
   currentPage: PageId = 'home';
   previousPage: PageId | null = null;
@@ -44,27 +54,18 @@ export class NavigationStore {
   get navigationItems(): PageConfig[] {
     return Object.values(PAGES_CONFIG).filter(page => {
       if (!page.showInNav) return false;
-      
-      // Check role requirements
-      if (page.requiredRole) {
-        return authStore.hasRole(page.requiredRole);
-      }
-      
-      return true;
+      return pageAccessAllowed(page);
     });
   }
 
   // Check if page is accessible
   canAccessPage = (pageId: PageId): boolean => {
     const page = PAGES_CONFIG[pageId];
-    
-    if (!page.requiresAuth) return true;
+
+    if (!page.requiresAuth) return pageAccessAllowed(page);
     if (!authStore.isAuthenticated) return false;
-    if (page.requiredRole) {
-      return authStore.hasRole(page.requiredRole);
-    }
-    
-    return true;
+
+    return pageAccessAllowed(page);
   };
 
   // Navigate to page

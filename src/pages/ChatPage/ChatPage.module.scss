@@ -1,0 +1,160 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include flex-column;
+  gap: $spacing-lg;
+  height: calc(100vh - 140px);
+  min-height: 480px;
+}
+
+.header {
+  margin-bottom: $spacing-xs;
+}
+
+.title {
+  @include heading-1;
+  margin: 0 0 $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-base;
+  color: $color-text-muted;
+  margin: 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: $spacing-lg;
+  flex: 1;
+  min-height: 0;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+}
+
+.chatList,
+.chatWindow {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.listHeader {
+  padding: $spacing-md;
+  font-weight: 600;
+  border-bottom: 1px solid $color-border-light;
+}
+
+.previews {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.previewItem {
+  width: 100%;
+  text-align: left;
+  padding: $spacing-md;
+  border: none;
+  border-bottom: 1px solid $color-border-light;
+  background: transparent;
+  cursor: pointer;
+  @include flex-column;
+  gap: 2px;
+
+  &:hover,
+  &.active {
+    background: $color-bg-tertiary;
+  }
+}
+
+.previewName {
+  font-weight: 600;
+}
+
+.previewBook {
+  @include caption-text;
+  color: $color-primary;
+}
+
+.previewMessage {
+  @include caption-text;
+  @include line-clamp(1);
+}
+
+.previewTime {
+  @include caption-text;
+  color: $color-text-light;
+}
+
+.chatWindow {
+  flex: 1;
+}
+
+.placeholder {
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-md;
+  flex: 1;
+  padding: $spacing-xl;
+  color: $color-text-muted;
+  text-align: center;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-md;
+  @include flex-column;
+  gap: $spacing-sm;
+}
+
+.message {
+  max-width: 75%;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-lg;
+
+  &.own {
+    align-self: flex-end;
+    background: $color-primary;
+    color: white;
+  }
+
+  &.other {
+    align-self: flex-start;
+    background: $color-bg-tertiary;
+  }
+}
+
+.messageText {
+  margin: 0 0 4px;
+  word-break: break-word;
+}
+
+.messageTime {
+  font-size: $font-size-xs;
+  opacity: 0.75;
+}
+
+.inputRow {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  border-top: 1px solid $color-border-light;
+  align-items: flex-end;
+}
+
+.empty {
+  text-align: center;
+  color: $color-text-muted;
+  padding: $spacing-lg;
+  margin: 0;
+}

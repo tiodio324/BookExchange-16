@@ -1,41 +1,39 @@
-import { makeAutoObservable } from 'mobx';
-import { User, UserRole, ROLE_PERMISSIONS, RolePermissions } from '@/types';
-import { dataStore } from './DataStore';
-
-// Ключи для сохранения сессии авторизации
-const AUTH_STORAGE_KEY = 'bookcrossing_auth';
-const SESSION_EXPIRY_KEY = 'bookcrossing_session_expiry';
-
-// Длительность сессии (24 часа)
-const SESSION_DURATION = 24 * 60 * 60 * 1000;
-
-// Пароль администратора (единый смотритель пункта буккроссинга)
-const ADMIN_PASSWORD = 'admin2026';
-
-interface StoredAuthState {
-  role: UserRole;
-  memberId?: string;
-  cardNumber?: string;
-  expiry: number;
-}
+import { makeAutoObservable, runInAction } from 'mobx';
+import {
+  auth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  type FirebaseUser,
+} from '@/firebase';
+import FirebaseService from '@/firebase';
+import { User, UserRole, ROLE_PERMISSIONS, RolePermissions, UserProfile, ProfileRole } from '@/types';
+import { getFirebaseAuthErrorMessage } from '@/utils/authErrors';
+import { getUserFullName, ADMIN_EMAIL } from '@/types/userProfile.types';
 
 export class AuthStore {
-  private _user: User = {
-    role: 'guest',
-  };
+  private _user: User = { role: 'guest' };
+  private _profile: UserProfile | null = null;
 
+  authInitialized = false;
   loginModalOpen = false;
+  authMode: 'login' | 'register' = 'login';
   loginError: string | null = null;
   isLoading = false;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
-    this.loadAuthState();
+    this.initAuthListener();
   }
 
-  // Getters
   get user(): User {
     return this._user;
+  }
+
+  get profile(): UserProfile | null {
+    return this._profile;
   }
 
   get isAuthenticated(): boolean {
@@ -54,100 +52,128 @@ export class AuthStore {
     return this._user.role;
   }
 
-  get currentMemberId(): string | null {
-    return this._user.memberId ?? null;
+  get currentUserId(): string | null {
+    return this._user.uid ?? null;
   }
 
-  get currentCardNumber(): string | null {
-    return this._user.cardNumber ?? null;
+  get currentEmail(): string | null {
+    return this._user.email ?? null;
+  }
+
+  /** @deprecated используйте currentUserId */
+  get currentMemberId(): string | null {
+    return this.currentUserId;
   }
 
   get permissions(): RolePermissions {
     return ROLE_PERMISSIONS[this._user.role];
   }
 
-  // Проверки прав
   canViewBooks = (): boolean => this.permissions.canViewBooks;
   canViewMembers = (): boolean => this.permissions.canViewMembers;
   canViewRequests = (): boolean => this.permissions.canViewRequests;
+  canUseChat = (): boolean => this.permissions.canUseChat;
   canBorrow = (): boolean => this.permissions.canBorrow;
   canReturn = (): boolean => this.permissions.canReturn;
-  canManageBooks = (): boolean => this.permissions.canManageBooks;
+  canAddBooks = (): boolean => this.permissions.canAddBooks;
   canManageGenres = (): boolean => this.permissions.canManageGenres;
   canManageMembers = (): boolean => this.permissions.canManageMembers;
-  canManageRequests = (): boolean => this.permissions.canManageRequests;
   canAccessAdmin = (): boolean => this.permissions.canAccessAdmin;
 
-  // Проверка минимально необходимой роли
+  hasPermission = (permission: keyof RolePermissions): boolean =>
+    this.permissions[permission];
+
   hasRole = (requiredRole: UserRole): boolean => {
     const roleHierarchy: Record<UserRole, number> = {
       guest: 0,
       member: 1,
       admin: 2,
     };
-    // Администратор и читатель — разные ветви прав, но для навигации
-    // достаточно иерархии: admin >= member >= guest.
     return roleHierarchy[this._user.role] >= roleHierarchy[requiredRole];
   };
 
-  // Загрузка сессии из хранилища
-  private loadAuthState = (): void => {
-    try {
-      const storedData = localStorage.getItem(AUTH_STORAGE_KEY);
-      const expiryData = localStorage.getItem(SESSION_EXPIRY_KEY);
-
-      if (storedData && expiryData) {
-        const authState: StoredAuthState = JSON.parse(storedData);
-        const expiry = parseInt(expiryData, 10);
-
-        if (Date.now() < expiry && authState.role !== 'guest') {
-          this._user = {
-            role: authState.role,
-            memberId: authState.memberId,
-            cardNumber: authState.cardNumber,
-          };
-        } else {
-          this.clearAuthStorage();
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load auth state:', error);
-      this.clearAuthStorage();
-    }
-  };
-
-  // Сохранение сессии в хранилище
-  private saveAuthState = (): void => {
-    try {
-      if (this._user.role !== 'guest') {
-        const authState: StoredAuthState = {
-          role: this._user.role,
-          memberId: this._user.memberId,
-          cardNumber: this._user.cardNumber,
-          expiry: Date.now() + SESSION_DURATION,
-        };
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState));
-        localStorage.setItem(SESSION_EXPIRY_KEY, String(authState.expiry));
+  private initAuthListener = (): void => {
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        await this.applyFirebaseUser(firebaseUser);
       } else {
-        this.clearAuthStorage();
+        runInAction(() => {
+          this._user = { role: 'guest' };
+          this._profile = null;
+          this.authInitialized = true;
+        });
       }
-    } catch (error) {
-      console.error('Failed to save auth state:', error);
-    }
+    });
   };
 
-  private clearAuthStorage = (): void => {
+  private applyFirebaseUser = async (firebaseUser: FirebaseUser): Promise<void> => {
     try {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-      localStorage.removeItem(SESSION_EXPIRY_KEY);
+      let profile = await FirebaseService.getSnapshot<UserProfile>(`users/${firebaseUser.uid}`);
+
+      if (!profile) {
+        profile = await this.createProfileFromFirebaseUser(firebaseUser);
+      }
+
+      if (!profile.isActive) {
+        await signOut(auth);
+        runInAction(() => {
+          this.loginError = 'Аккаунт деактивирован администратором';
+          this._user = { role: 'guest' };
+          this._profile = null;
+          this.authInitialized = true;
+        });
+        return;
+      }
+
+      const role: UserRole = profile.role === 'admin' ? 'admin' : 'member';
+
+      runInAction(() => {
+        this._profile = profile;
+        this._user = {
+          role,
+          uid: firebaseUser.uid,
+          email: profile.email,
+          name: getUserFullName(profile),
+        };
+        this.authInitialized = true;
+        this.loginError = null;
+      });
     } catch (error) {
-      console.error('Failed to clear auth storage:', error);
+      console.error('Apply firebase user error:', error);
+      runInAction(() => {
+        this.authInitialized = true;
+      });
     }
   };
 
-  // Управление модальным окном
-  openLoginModal = (): void => {
+  private createProfileFromFirebaseUser = async (firebaseUser: FirebaseUser): Promise<UserProfile> => {
+    const now = new Date().toISOString();
+    const displayName = firebaseUser.displayName?.trim() || '';
+    const [lastName = '', firstName = ''] = displayName.includes(' ')
+      ? [displayName.split(' ')[0], displayName.split(' ').slice(1).join(' ')]
+      : ['', displayName];
+
+    const email = (firebaseUser.email || '').toLowerCase();
+    const role: ProfileRole = email === ADMIN_EMAIL ? 'admin' : 'member';
+
+    const profile: UserProfile = {
+      id: firebaseUser.uid,
+      email,
+      firstName,
+      lastName,
+      role,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await FirebaseService.setData(`users/${firebaseUser.uid}`, profile);
+    return profile;
+  };
+
+  openLoginModal = (mode: 'login' | 'register' = 'login'): void => {
     this.loginModalOpen = true;
+    this.authMode = mode;
     this.loginError = null;
   };
 
@@ -157,78 +183,87 @@ export class AuthStore {
     this.isLoading = false;
   };
 
-  // Вход администратора по паролю
-  loginAsAdmin = async (password: string): Promise<boolean> => {
-    this.isLoading = true;
+  setAuthMode = (mode: 'login' | 'register'): void => {
+    this.authMode = mode;
     this.loginError = null;
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 400));
-
-      if (password === ADMIN_PASSWORD) {
-        this._user = { role: 'admin' };
-        this.saveAuthState();
-        this.closeLoginModal();
-        return true;
-      }
-
-      this.loginError = 'Неверный пароль администратора';
-      return false;
-    } catch (error) {
-      this.loginError = 'Ошибка авторизации';
-      console.error('Admin login error:', error);
-      return false;
-    } finally {
-      this.isLoading = false;
-    }
   };
 
-  // Вход читателя по номеру читательского билета (без пароля)
-  loginAsReader = async (cardNumber: string): Promise<boolean> => {
+  register = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+  ): Promise<boolean> => {
     this.isLoading = true;
     this.loginError = null;
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 400));
+      const normalizedEmail = email.trim().toLowerCase();
+      const credential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+      const displayName = `${lastName.trim()} ${firstName.trim()}`.trim();
+      await updateProfile(credential.user, { displayName });
 
-      const card = cardNumber.trim();
-      if (!card) {
-        this.loginError = 'Введите номер читательского билета';
-        return false;
-      }
-
-      const member = dataStore.members.find(
-        m => m.isActive && m.cardNumber.toLowerCase() === card.toLowerCase()
-      );
-
-      if (!member) {
-        this.loginError = 'Читательский билет не найден';
-        return false;
-      }
-
-      this._user = {
-        role: 'member',
-        memberId: member.id,
-        cardNumber: member.cardNumber,
-        name: `${member.lastName} ${member.firstName}`.trim(),
+      const now = new Date().toISOString();
+      const role: ProfileRole = normalizedEmail === ADMIN_EMAIL ? 'admin' : 'member';
+      const profile: UserProfile = {
+        id: credential.user.uid,
+        email: normalizedEmail,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        role,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
       };
-      this.saveAuthState();
+
+      await FirebaseService.setData(`users/${credential.user.uid}`, profile);
       this.closeLoginModal();
       return true;
     } catch (error) {
-      this.loginError = 'Ошибка авторизации';
-      console.error('Reader login error:', error);
+      const code = (error as { code?: string }).code || '';
+      runInAction(() => {
+        this.loginError = getFirebaseAuthErrorMessage(code);
+      });
       return false;
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   };
 
-  // Выход
-  logout = (): void => {
-    this._user = { role: 'guest' };
-    this.clearAuthStorage();
+  login = async (email: string, password: string): Promise<boolean> => {
+    this.isLoading = true;
     this.loginError = null;
+
+    try {
+      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      this.closeLoginModal();
+      return true;
+    } catch (error) {
+      const code = (error as { code?: string }).code || '';
+      runInAction(() => {
+        this.loginError = getFirebaseAuthErrorMessage(code);
+      });
+      return false;
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  };
+
+  logout = async (): Promise<void> => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    runInAction(() => {
+      this._user = { role: 'guest' };
+      this._profile = null;
+      this.loginError = null;
+    });
   };
 
   clearError = (): void => {
@@ -236,5 +271,4 @@ export class AuthStore {
   };
 }
 
-// Singleton instance
 export const authStore = new AuthStore();

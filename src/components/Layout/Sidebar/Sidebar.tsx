@@ -37,6 +37,12 @@ const renderNavIcon = (icon: string) => {
           <path d="M21 13v2a4 4 0 01-4 4H3" />
         </svg>
       );
+    case 'chat':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        </svg>
+      );
     case 'settings':
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -69,13 +75,13 @@ export const Sidebar = observer(() => {
 
   return (
     <>
-      {mobileMenuOpen && (
+      {/* {mobileMenuOpen && (
         <div 
           className={styles.overlay} 
           onClick={closeMobileMenu}
           aria-hidden="true"
         />
-      )}
+      )} */}
       <aside className={sidebarClasses}>
         <nav className={styles.nav}>
           <ul className={styles.navList}>

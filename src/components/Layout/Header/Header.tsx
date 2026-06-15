@@ -4,13 +4,17 @@ import { Button } from '@/components/UI';
 import styles from './Header.module.scss';
 
 export const Header = observer(() => {
-  const { isAuthenticated, currentRole, logout, openLoginModal } = authStore;
+  const { isAuthenticated, currentRole, profile, logout, openLoginModal } = authStore;
   const { pageTitle, toggleMobileMenu, mobileMenuOpen, navigate } = navigationStore;
 
   const getRoleName = (role: string): string => {
     switch (role) {
       case 'admin': return 'Администратор';
-      case 'member': return 'Читатель';
+      case 'member':
+        if (profile) {
+          return `${profile.firstName} ${profile.lastName}`.trim();
+        }
+        return 'Пользователь';
       default: return 'Гость';
     }
   };
@@ -52,12 +56,12 @@ export const Header = observer(() => {
         {isAuthenticated ? (
           <div className={styles.userInfo}>
             <span className={styles.role}>{getRoleName(currentRole)}</span>
-            <Button variant="ghost" size="sm" onClick={logout} className={styles.headerButton}>
+            <Button variant="ghost" size="sm" onClick={() => logout()} className={styles.headerButton}>
               Выйти
             </Button>
           </div>
         ) : (
-          <Button variant="secondary" size="sm" onClick={openLoginModal} className={styles.headerButton}>
+          <Button variant="secondary" size="sm" onClick={() => openLoginModal()} className={styles.headerButton}>
             Войти
           </Button>
         )}

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { navigationStore, dataStore } from '@/store';
 import { MainLayout, LoginModal, ConfirmModal, Toast } from '@/components';
-import { HomePage, BooksPage, RequestsPage, MembersPage, AdminPage } from '@/pages';
+import { HomePage, BooksPage, ChatPage, RequestsPage, MembersPage, AdminPage } from '@/pages';
 
 const PageRouter = observer(() => {
   const { currentPage } = navigationStore;
@@ -12,12 +12,13 @@ const PageRouter = observer(() => {
       return <HomePage />;
     case 'books':
       return <BooksPage />;
+    case 'chat':
+      return <ChatPage />;
     case 'requests':
       return <RequestsPage />;
     case 'members':
       return <MembersPage />;
     case 'admin':
-    case 'admin-books':
     case 'admin-genres':
     case 'admin-members':
       return <AdminPage />;

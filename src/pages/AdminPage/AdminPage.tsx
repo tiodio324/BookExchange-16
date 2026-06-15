@@ -1,44 +1,17 @@
 import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, uiStore } from '@/store';
-import { Card, Button, Table, Modal, Input, Select } from '@/components/UI';
+import { Card, Button, Table, Modal, Input } from '@/components/UI';
 import type { TableColumn } from '@/components/UI';
-import {
-  BOOK_CONDITION_LABELS,
-  BOOK_STATUS_LABELS,
-} from '@/types';
-import type {
-  Book,
-  Genre,
-  Member,
-  BookFormData,
-  GenreFormData,
-  MemberFormData,
-  BookCondition,
-} from '@/types';
+import type { Genre, UserProfile, GenreFormData } from '@/types';
+import { isProtectedAdminUser } from '@/types';
 import styles from './AdminPage.module.scss';
 
-type AdminTab = 'books' | 'genres' | 'members';
-
-const emptyBookForm: BookFormData = {
-  title: '',
-  author: '',
-  genreId: '',
-  condition: 'good',
-  description: '',
-};
+type AdminTab = 'genres' | 'users';
 
 const emptyGenreForm: GenreFormData = {
   name: '',
   description: '',
-};
-
-const emptyMemberForm: MemberFormData = {
-  cardNumber: '',
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
 };
 
 const renderActions = (onEdit: () => void, onDelete: () => void) => (
@@ -60,160 +33,78 @@ const renderActions = (onEdit: () => void, onDelete: () => void) => (
 
 export const AdminPage = observer(() => {
   const {
-    books,
     genres,
-    members,
-    activeGenres,
+    users,
     loadAllData,
-    createBook,
-    updateBook,
-    deleteBook,
     createGenre,
     updateGenre,
     deleteGenre,
-    createMember,
-    updateMember,
-    deleteMember,
-    getGenreById,
-    booksLoading,
+    deactivateUser,
     genresLoading,
-    membersLoading,
+    usersLoading,
   } = dataStore;
 
-  const [activeTab, setActiveTab] = useState<AdminTab>('books');
+  const [activeTab, setActiveTab] = useState<AdminTab>('genres');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  const [bookForm, setBookForm] = useState<BookFormData>(emptyBookForm);
   const [genreForm, setGenreForm] = useState<GenreFormData>(emptyGenreForm);
-  const [memberForm, setMemberForm] = useState<MemberFormData>(emptyMemberForm);
 
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
 
-  const resetForms = () => {
-    setBookForm(emptyBookForm);
-    setGenreForm(emptyGenreForm);
-    setMemberForm(emptyMemberForm);
-    setEditingId(null);
-  };
-
   const openCreateModal = () => {
-    resetForms();
+    setGenreForm(emptyGenreForm);
+    setEditingId(null);
     setModalMode('create');
     setModalOpen(true);
   };
 
-  const openEditModal = (item: Book | Genre | Member) => {
+  const openEditModal = (genre: Genre) => {
     setModalMode('edit');
-    setEditingId(item.id);
-
-    if (activeTab === 'books') {
-      const b = item as Book;
-      setBookForm({
-        title: b.title,
-        author: b.author,
-        genreId: b.genreId,
-        condition: b.condition,
-        description: b.description || '',
-      });
-    } else if (activeTab === 'genres') {
-      const g = item as Genre;
-      setGenreForm({ name: g.name, description: g.description || '' });
-    } else {
-      const m = item as Member;
-      setMemberForm({
-        cardNumber: m.cardNumber,
-        firstName: m.firstName,
-        lastName: m.lastName,
-        email: m.email || '',
-        phone: m.phone || '',
-      });
-    }
-
+    setEditingId(genre.id);
+    setGenreForm({ name: genre.name, description: genre.description || '' });
     setModalOpen(true);
   };
 
   const handleSave = async () => {
     try {
-      if (activeTab === 'books') {
-        if (!bookForm.title || !bookForm.author || !bookForm.genreId) {
-          uiStore.showError('Заполните название, автора и жанр');
-          return;
-        }
-        if (modalMode === 'create') {
-          await createBook(bookForm);
-        } else if (editingId) {
-          await updateBook(editingId, bookForm);
-        }
-      } else if (activeTab === 'genres') {
-        if (!genreForm.name) {
-          uiStore.showError('Укажите название жанра');
-          return;
-        }
-        if (modalMode === 'create') {
-          await createGenre(genreForm);
-        } else if (editingId) {
-          await updateGenre(editingId, genreForm);
-        }
-      } else {
-        if (!memberForm.cardNumber || !memberForm.firstName || !memberForm.lastName) {
-          uiStore.showError('Заполните билет, имя и фамилию');
-          return;
-        }
-        if (dataStore.isCardNumberTaken(memberForm.cardNumber, editingId || undefined)) {
-          uiStore.showError('Такой читательский билет уже существует');
-          return;
-        }
-        if (modalMode === 'create') {
-          await createMember(memberForm);
-        } else if (editingId) {
-          await updateMember(editingId, memberForm);
-        }
+      if (!genreForm.name) {
+        uiStore.showError('Укажите название жанра');
+        return;
       }
-
-      uiStore.showSuccess(modalMode === 'create' ? 'Запись добавлена' : 'Запись обновлена');
+      if (modalMode === 'create') {
+        await createGenre(genreForm);
+      } else if (editingId) {
+        await updateGenre(editingId, genreForm);
+      }
+      uiStore.showSuccess(modalMode === 'create' ? 'Жанр добавлен' : 'Жанр обновлён');
       setModalOpen(false);
-      resetForms();
     } catch {
       uiStore.showError('Ошибка сохранения');
     }
   };
 
-  const handleDelete = (id: string) => {
-    uiStore.showConfirm(
-      'Удаление записи',
-      'Вы уверены, что хотите удалить эту запись?',
-      async () => {
-        if (activeTab === 'books') {
-          await deleteBook(id);
-        } else if (activeTab === 'genres') {
-          await deleteGenre(id);
-        } else {
-          await deleteMember(id);
-        }
-        uiStore.showSuccess('Запись удалена');
-      }
-    );
+  const handleDeleteGenre = (id: string) => {
+    uiStore.showConfirm('Удаление жанра', 'Вы уверены, что хотите удалить этот жанр?', async () => {
+      await deleteGenre(id);
+      uiStore.showSuccess('Жанр удалён');
+    });
   };
 
-  const genreOptions = activeGenres.map(g => ({ value: g.id, label: g.name }));
-  const conditionOptions = Object.entries(BOOK_CONDITION_LABELS).map(([value, label]) => ({ value, label }));
+  const handleDeactivateUser = (user: UserProfile) => {
+    if (isProtectedAdminUser(user)) return;
 
-  const bookColumns: TableColumn<Book>[] = [
-    { key: 'title', title: 'Название' },
-    { key: 'author', title: 'Автор' },
-    { key: 'genreId', title: 'Жанр', render: (v: unknown) => getGenreById(v as string)?.name || '—' },
-    { key: 'status', title: 'Статус', width: '110px', render: (v: unknown) => BOOK_STATUS_LABELS[v as Book['status']] },
-    {
-      key: 'actions',
-      title: '',
-      width: '100px',
-      render: (_: unknown, row: Book) => renderActions(() => openEditModal(row), () => handleDelete(row.id)),
-    },
-  ];
+    uiStore.showConfirm(
+      'Деактивация пользователя',
+      `Деактивировать аккаунт ${user.email}?`,
+      async () => {
+        await deactivateUser(user.id);
+        uiStore.showSuccess('Пользователь деактивирован');
+      },
+    );
+  };
 
   const genreColumns: TableColumn<Genre>[] = [
     { key: 'name', title: 'Название' },
@@ -222,44 +113,42 @@ export const AdminPage = observer(() => {
       key: 'actions',
       title: '',
       width: '100px',
-      render: (_: unknown, row: Genre) => renderActions(() => openEditModal(row), () => handleDelete(row.id)),
+      render: (_: unknown, row: Genre) => renderActions(() => openEditModal(row), () => handleDeleteGenre(row.id)),
     },
   ];
 
-  const memberColumns: TableColumn<Member>[] = [
-    { key: 'cardNumber', title: 'Билет', width: '140px' },
+  const userColumns: TableColumn<UserProfile>[] = [
+    { key: 'email', title: 'Email' },
     { key: 'lastName', title: 'Фамилия' },
     { key: 'firstName', title: 'Имя' },
-    { key: 'phone', title: 'Телефон', render: (v: unknown) => (v as string) || '—' },
+    { key: 'role', title: 'Роль', width: '120px', render: (v: unknown) => (v === 'admin' ? 'Админ' : 'Читатель') },
     {
       key: 'actions',
       title: '',
-      width: '100px',
-      render: (_: unknown, row: Member) => renderActions(() => openEditModal(row), () => handleDelete(row.id)),
+      width: '140px',
+      render: (_: unknown, row: UserProfile) => {
+        if (isProtectedAdminUser(row)) {
+          return <span>—</span>;
+        }
+        return row.isActive ? (
+          <Button size="sm" variant="danger" onClick={() => handleDeactivateUser(row)}>
+            Деактивировать
+          </Button>
+        ) : (
+          <span>Неактивен</span>
+        );
+      },
     },
   ];
-
-  const entityName = activeTab === 'books' ? 'книгу' : activeTab === 'genres' ? 'жанр' : 'читателя';
-
-  const getModalTitle = () => {
-    const action = modalMode === 'create' ? 'Добавить' : 'Редактировать';
-    return `${action} ${entityName}`;
-  };
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Администрирование</h1>
-        <p className={styles.subtitle}>Управление книгами, жанрами и читательскими билетами</p>
+        <p className={styles.subtitle}>Управление жанрами и зарегистрированными пользователями</p>
       </div>
 
       <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === 'books' ? styles.active : ''}`}
-          onClick={() => setActiveTab('books')}
-        >
-          Книги
-        </button>
         <button
           className={`${styles.tab} ${activeTab === 'genres' ? styles.active : ''}`}
           onClick={() => setActiveTab('genres')}
@@ -267,29 +156,20 @@ export const AdminPage = observer(() => {
           Жанры
         </button>
         <button
-          className={`${styles.tab} ${activeTab === 'members' ? styles.active : ''}`}
-          onClick={() => setActiveTab('members')}
+          className={`${styles.tab} ${activeTab === 'users' ? styles.active : ''}`}
+          onClick={() => setActiveTab('users')}
         >
-          Читатели
+          Пользователи
         </button>
       </div>
 
-      <Card className={styles.toolbar}>
-        <Button variant="primary" onClick={openCreateModal}>
-          Добавить {entityName}
-        </Button>
-      </Card>
+      {activeTab === 'genres' && (
+        <Card className={styles.toolbar}>
+          <Button variant="primary" onClick={openCreateModal}>Добавить жанр</Button>
+        </Card>
+      )}
 
       <Card padding="none">
-        {activeTab === 'books' && (
-          <Table
-            columns={bookColumns}
-            data={books.filter(b => b.isActive)}
-            keyField="id"
-            loading={booksLoading}
-            emptyText="Нет книг"
-          />
-        )}
         {activeTab === 'genres' && (
           <Table
             columns={genreColumns}
@@ -299,13 +179,13 @@ export const AdminPage = observer(() => {
             emptyText="Нет жанров"
           />
         )}
-        {activeTab === 'members' && (
+        {activeTab === 'users' && (
           <Table
-            columns={memberColumns}
-            data={members.filter(m => m.isActive)}
+            columns={userColumns}
+            data={users}
             keyField="id"
-            loading={membersLoading}
-            emptyText="Нет читателей"
+            loading={usersLoading}
+            emptyText="Нет зарегистрированных пользователей"
           />
         )}
       </Card>
@@ -313,7 +193,7 @@ export const AdminPage = observer(() => {
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={getModalTitle()}
+        title={modalMode === 'create' ? 'Добавить жанр' : 'Редактировать жанр'}
         footer={
           <div className={styles.modalFooter}>
             <Button variant="ghost" onClick={() => setModalOpen(false)}>Отмена</Button>
@@ -322,83 +202,16 @@ export const AdminPage = observer(() => {
         }
       >
         <div className={styles.form}>
-          {activeTab === 'books' && (
-            <>
-              <Input
-                label="Название *"
-                value={bookForm.title}
-                onChange={(e) => setBookForm({ ...bookForm, title: e.target.value })}
-              />
-              <Input
-                label="Автор *"
-                value={bookForm.author}
-                onChange={(e) => setBookForm({ ...bookForm, author: e.target.value })}
-              />
-              <Select
-                label="Жанр *"
-                options={genreOptions}
-                value={bookForm.genreId}
-                onChange={(e) => setBookForm({ ...bookForm, genreId: e.target.value })}
-              />
-              <Select
-                label="Состояние"
-                options={conditionOptions}
-                value={bookForm.condition}
-                onChange={(e) => setBookForm({ ...bookForm, condition: e.target.value as BookCondition })}
-                placeholder=""
-              />
-              <Input
-                label="Описание"
-                value={bookForm.description}
-                onChange={(e) => setBookForm({ ...bookForm, description: e.target.value })}
-              />
-            </>
-          )}
-          {activeTab === 'genres' && (
-            <>
-              <Input
-                label="Название *"
-                value={genreForm.name}
-                onChange={(e) => setGenreForm({ ...genreForm, name: e.target.value })}
-              />
-              <Input
-                label="Описание"
-                value={genreForm.description}
-                onChange={(e) => setGenreForm({ ...genreForm, description: e.target.value })}
-              />
-            </>
-          )}
-          {activeTab === 'members' && (
-            <>
-              <Input
-                label="Читательский билет *"
-                hint="Например: BC-001. По этому номеру читатель входит в систему."
-                value={memberForm.cardNumber}
-                onChange={(e) => setMemberForm({ ...memberForm, cardNumber: e.target.value })}
-              />
-              <Input
-                label="Фамилия *"
-                value={memberForm.lastName}
-                onChange={(e) => setMemberForm({ ...memberForm, lastName: e.target.value })}
-              />
-              <Input
-                label="Имя *"
-                value={memberForm.firstName}
-                onChange={(e) => setMemberForm({ ...memberForm, firstName: e.target.value })}
-              />
-              <Input
-                label="Email"
-                type="email"
-                value={memberForm.email}
-                onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
-              />
-              <Input
-                label="Телефон"
-                value={memberForm.phone}
-                onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
-              />
-            </>
-          )}
+          <Input
+            label="Название *"
+            value={genreForm.name}
+            onChange={(e) => setGenreForm({ ...genreForm, name: e.target.value })}
+          />
+          <Input
+            label="Описание"
+            value={genreForm.description}
+            onChange={(e) => setGenreForm({ ...genreForm, description: e.target.value })}
+          />
         </div>
       </Modal>
     </div>

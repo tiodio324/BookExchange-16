@@ -6,9 +6,8 @@ export type UserRole = 'guest' | 'member' | 'admin';
 
 export interface User {
   role: UserRole;
-  // Идентификатор и номер билета заполняются только для читателя (member)
-  memberId?: string;
-  cardNumber?: string;
+  uid?: string;
+  email?: string;
   name?: string;
 }
 
@@ -18,42 +17,41 @@ export interface AuthState {
   loginModalOpen: boolean;
 }
 
-// Сопоставление ролей и прав доступа
 export const ROLE_PERMISSIONS = {
   guest: {
     canViewBooks: true,
-    canViewMembers: true,
+    canViewMembers: false,
     canViewRequests: false,
+    canUseChat: false,
     canBorrow: false,
     canReturn: false,
-    canManageBooks: false,
+    canAddBooks: false,
     canManageGenres: false,
     canManageMembers: false,
-    canManageRequests: false,
     canAccessAdmin: false,
   },
   member: {
     canViewBooks: true,
-    canViewMembers: true,
+    canViewMembers: false,
     canViewRequests: true,
+    canUseChat: true,
     canBorrow: true,
     canReturn: true,
-    canManageBooks: false,
+    canAddBooks: true,
     canManageGenres: false,
     canManageMembers: false,
-    canManageRequests: false,
     canAccessAdmin: false,
   },
   admin: {
     canViewBooks: true,
     canViewMembers: true,
     canViewRequests: true,
+    canUseChat: false,
     canBorrow: false,
     canReturn: false,
-    canManageBooks: true,
+    canAddBooks: false,
     canManageGenres: true,
     canManageMembers: true,
-    canManageRequests: true,
     canAccessAdmin: true,
   },
 } as const;

@@ -2,13 +2,15 @@
 // Navigation Types
 // ============================================
 
+import type { RolePermissions } from './user.types';
+
 export type PageId =
   | 'home'
   | 'books'
+  | 'chat'
   | 'requests'
   | 'members'
   | 'admin'
-  | 'admin-books'
   | 'admin-genres'
   | 'admin-members';
 
@@ -18,6 +20,7 @@ export interface PageConfig {
   icon: string;
   requiresAuth: boolean;
   requiredRole?: 'member' | 'admin';
+  requiredPermission?: keyof RolePermissions;
   showInNav: boolean;
   parentId?: PageId;
 }
@@ -37,9 +40,18 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
     requiresAuth: false,
     showInNav: true,
   },
+  chat: {
+    id: 'chat',
+    title: 'Чат',
+    icon: 'chat',
+    requiresAuth: true,
+    requiredRole: 'member',
+    requiredPermission: 'canUseChat',
+    showInNav: true,
+  },
   requests: {
     id: 'requests',
-    title: 'Заявки',
+    title: 'Журнал действий',
     icon: 'exchange',
     requiresAuth: true,
     requiredRole: 'member',
@@ -47,9 +59,10 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
   },
   members: {
     id: 'members',
-    title: 'Читатели',
+    title: 'Пользователи',
     icon: 'users',
-    requiresAuth: false,
+    requiresAuth: true,
+    requiredRole: 'admin',
     showInNav: true,
   },
   admin: {
@@ -59,15 +72,6 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
     requiresAuth: true,
     requiredRole: 'admin',
     showInNav: true,
-  },
-  'admin-books': {
-    id: 'admin-books',
-    title: 'Управление книгами',
-    icon: 'book',
-    requiresAuth: true,
-    requiredRole: 'admin',
-    showInNav: false,
-    parentId: 'admin',
   },
   'admin-genres': {
     id: 'admin-genres',

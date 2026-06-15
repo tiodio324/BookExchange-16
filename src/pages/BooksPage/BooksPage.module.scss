@@ -11,6 +11,13 @@
   margin-bottom: $spacing-md;
 }
 
+.headerRow {
+  @include flex-between;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
 .title {
   @include heading-1;
   margin: 0 0 $spacing-xs;
@@ -98,6 +105,11 @@
   @include caption-text;
 }
 
+.adminInfo {
+  @include flex-column;
+  gap: $spacing-xs;
+}
+
 .hint {
   @include caption-text;
   color: $color-text-light;
@@ -108,4 +120,53 @@
   color: $color-text-muted;
   padding: $spacing-lg;
   margin: 0;
+}
+
+.form {
+  @include flex-column;
+  gap: $spacing-md;
+}
+
+.actionGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  align-items: center;
+}
+
+.downloadLink {
+  @include caption-text;
+  color: $color-primary;
+  text-decoration: underline;
+}
+
+.owner {
+  @include caption-text;
+  margin: 0;
+}
+
+.fileField {
+  @include flex-column;
+  gap: $spacing-xs;
+}
+
+.fileLabel {
+  font-size: $font-size-sm;
+  font-weight: 500;
+}
+
+.fileName {
+  @include caption-text;
+  color: $color-text-muted;
+}
+
+.fileHint {
+  @include caption-text;
+  color: $color-text-light;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
 }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, authStore, navigationStore } from '@/store';
-import { Card, Button, Badge } from '@/components/UI';
+import { Card, Button } from '@/components/UI';
 import styles from './HomePage.module.scss';
 
 interface StatCardProps {
@@ -22,7 +22,7 @@ const renderStatCard = ({ title, value, icon, color }: StatCardProps) => (
 );
 
 export const HomePage = observer(() => {
-  const { activeBooks, availableBooks, activeMembers, pendingRequests, loadAllData, booksLoading } = dataStore;
+  const { activeBooks, availableBooks, activeUsers, loadAllData, booksLoading } = dataStore;
   const { isMember, isAdmin, isAuthenticated } = authStore;
   const { navigate } = navigationStore;
 
@@ -30,7 +30,9 @@ export const HomePage = observer(() => {
     loadAllData();
   }, [loadAllData]);
 
-  const takenCount = activeBooks.filter(b => b.status === 'taken').length;
+  const takenCount = activeBooks.filter(
+    b => b.format === 'paper' && b.status === 'taken',
+  ).length;
 
   return (
     <div className={styles.page}>
@@ -40,18 +42,29 @@ export const HomePage = observer(() => {
             Буккроссинг — обмен книгами
           </h1>
           <p className={styles.welcomeText}>
-            «Прочитал — отдай другому». Берите книги из общего оборота и возвращайте их,
-            чтобы они продолжили путешествие к новым читателям.
-            {!isAuthenticated && ' Войдите по читательскому билету, чтобы брать книги.'}
+            «Прочитал — отдай другому». Обменивайтесь бумажными и электронными книгами,
+            общайтесь с другими читателями в чате.
+            {!isAuthenticated && ' Зарегистрируйтесь или войдите, чтобы участвовать в обмене.'}
           </p>
           {!isAuthenticated && (
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => authStore.openLoginModal()}
-            >
-              Войти по билету
-            </Button>
+            <div className={styles.welcomeButtons}>
+              <Button
+                variant="primary"
+                size="lg"
+                className={styles.welcomeBtnPrimary}
+                onClick={() => authStore.openLoginModal('login')}
+              >
+                Войти
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                className={styles.welcomeBtnSecondary}
+                onClick={() => authStore.openLoginModal('register')}
+              >
+                Регистрация
+              </Button>
+            </div>
           )}
         </div>
         <div className={styles.welcomeDecor}>
@@ -98,9 +111,9 @@ export const HomePage = observer(() => {
             </svg>
           ),
         })}
-        {renderStatCard({
-          title: 'Читателей',
-          value: activeMembers.length,
+        {isAdmin && renderStatCard({
+          title: 'Пользователей',
+          value: activeUsers.length,
           color: 'warning',
           icon: (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -131,6 +144,22 @@ export const HomePage = observer(() => {
             <p>Просмотр и поиск книг по жанрам</p>
           </Card>
 
+          {isMember && (
+            <Card
+              className={styles.actionCard}
+              hoverable
+              onClick={() => navigate('chat')}
+            >
+              <div className={styles.actionIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+              </div>
+              <h3>Чат</h3>
+              <p>Обсуждение обмена книгами</p>
+            </Card>
+          )}
+
           {(isMember || isAdmin) && (
             <Card
               className={styles.actionCard}
@@ -145,28 +174,27 @@ export const HomePage = observer(() => {
                   <path d="M21 13v2a4 4 0 01-4 4H3" />
                 </svg>
               </div>
-              <h3>Заявки</h3>
-              <p>{isAdmin ? 'Обработка заявок читателей' : 'Ваши заявки на книги'}</p>
-              {isAdmin && pendingRequests.length > 0 && (
-                <Badge variant="warning">{pendingRequests.length} в ожидании</Badge>
-              )}
+              <h3>Журнал действий</h3>
+              <p>{isAdmin ? 'История действий читателей' : 'Ваши действия с книгами'}</p>
             </Card>
           )}
 
-          <Card
-            className={styles.actionCard}
-            hoverable
-            onClick={() => navigate('members')}
-          >
-            <div className={styles.actionIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-              </svg>
-            </div>
-            <h3>Читатели</h3>
-            <p>Участники буккроссинг-пункта</p>
-          </Card>
+          {isAdmin && (
+            <Card
+              className={styles.actionCard}
+              hoverable
+              onClick={() => navigate('members')}
+            >
+              <div className={styles.actionIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                </svg>
+              </div>
+              <h3>Пользователи</h3>
+              <p>Зарегистрированные участники</p>
+            </Card>
+          )}
 
           {isAdmin && (
             <Card
@@ -181,7 +209,7 @@ export const HomePage = observer(() => {
                 </svg>
               </div>
               <h3>Администрирование</h3>
-              <p>Книги, жанры и читательские билеты</p>
+              <p>Жанры и пользователи</p>
             </Card>
           )}
         </div>
